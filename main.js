@@ -126,8 +126,10 @@ function loadModel(scene, camera, renderer) {
 }
 
 
+
+
 function animate(renderer, scene, camera) {
-    const speed = 10; // Adjust the speed of movement
+    const speed = 100; // Adjust the speed of movement
     let velocityY = 0;
 
     // Calculate the forward and right vectors of the camera
@@ -167,6 +169,9 @@ function animate(renderer, scene, camera) {
             isJumping = false;
         }   
     }
+    
+
+
     renderer.render(scene, camera);
     requestAnimationFrame(() => animate(renderer, scene, camera));
 }
@@ -180,4 +185,3 @@ createGround(scene);
 createSkybox(scene);
 createControls(camera, renderer.domElement);
 loadModel(scene, camera, renderer);
-animate(renderer, scene, camera);
