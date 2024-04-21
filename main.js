@@ -21,26 +21,17 @@ document.addEventListener('keyup', function (event) {
 }, false);
 
 
-function createScene() {
-    const scene = new THREE.Scene();
-    return scene;
-}
+const scene = new THREE.Scene();
 
-function createCamera(scene) {
-    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 45, 30000);
-    camera.position.set(-900, 100, -900);
-    camera.lookAt(scene.position);
-    scene.add(camera);
-    return camera;
-}
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 45, 30000);
+camera.position.set(-900, 100, -900);
+camera.lookAt(scene.position);
+scene.add(camera);
 
-function createRenderer() {
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.shadowMap.enabled = true;
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-    return renderer;
-}
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.shadowMap.enabled = true;
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
 function createGround(scene) {
     var groundTexture = new THREE.TextureLoader().load( 'imports/textures/floor2.jpg' );
@@ -62,13 +53,11 @@ function createGround(scene) {
 }
 
 function addlight(scene) {
-    const light = new THREE.AmbientLight(0x404040, 0.2); // soft white light
-    scene.add(light);
+    const light = new THREE.AmbientLight(0x404040, 0.1); // soft white light
+    //scene.add(light);
 
     const light2 = new THREE.DirectionalLight(0xffffff, 2);
-    light2.position.set(5000, 8000, -5000);
-    light2.castShadow = true;
-
+    light2.position.set(5000, 8000, -9000);
     // Create an Object3D to serve as the target for the light
     const targetObject = new THREE.Object3D();
     targetObject.position.set(-900, 0, -900); // replace x, y, z with the coordinates you want the light to point to
@@ -77,7 +66,19 @@ function addlight(scene) {
 
     light2.target = targetObject; // set the target of the light
 
+
     scene.add(light2);
+    light2.castShadow = true;
+    light2.shadow.mapSize.width = 20480; // default
+    light2.shadow.mapSize.height = 20480; // default
+    light2.shadow.camera.near = 1; // default
+    light2.shadow.camera.far = 50000; // default
+    light2.shadow.camera.left = 10000;
+    light2.shadow.camera.right = -10000;
+    light2.shadow.camera.top = 10000;
+    light2.shadow.camera.bottom = -10000;
+    
+    
 }
 
 function createFinishLine(scene) {
@@ -140,21 +141,21 @@ function createTree(cylinderHeight, cylinderRadius, coneHeight, baseConeRadius, 
 const forest = new THREE.Group();
 function createForest(scene, xpos, zpos) {
     
-    const tree1 = createTree(100, 100, 300, 400, xpos-100, zpos-100);
+    const tree1 = createTree(1000, 100, 300, 400, xpos-100, zpos-100);
     forest.add(tree1);
-    const tree2 = createTree(100, 100, 200, 20, xpos+100, zpos+100);
+    const tree2 = createTree(500, 100, 200, 700, xpos+100, zpos+100);
     forest.add(tree2);
-    const tree3 = createTree(100, 10, 200, 20, xpos+300, zpos+300);
+    const tree3 = createTree(130, 100, 200, 90, xpos+300, zpos+300);
     forest.add(tree3);
-    const tree4 = createTree(100, 10, 200, 20, xpos-300, zpos-300);
+    const tree4 = createTree(1300, 100, 100, 120, xpos-300, zpos-300);
     forest.add(tree4);
-    const tree5 = createTree(100, 100, 300, 400, xpos-500, zpos-700);
+    const tree5 = createTree(250, 103, 300, 400, xpos-500, zpos-700);
     forest.add(tree5);
-    const tree6 = createTree(100, 100, 200, 20, xpos+900, zpos+300);
+    const tree6 = createTree(725, 85, 500, 320, xpos+900, zpos+300);
     forest.add(tree6);
-    const tree7 = createTree(100, 10, 200, 20, xpos+1200, zpos-1200);
+    const tree7 = createTree(386, 30, 400, 120, xpos+1200, zpos-1200);
     forest.add(tree7);
-    const tree8 = createTree(100, 10, 200, 20, xpos-500, zpos+300);
+    const tree8 = createTree(100, 70, 200, 420, xpos-500, zpos+300);
     forest.add(tree8);
     scene.add(forest);
 }
@@ -179,8 +180,7 @@ function loadModel(scene, camera, renderer) {
         model.position.set(0, 0, -12000);
         camera.position.set(0, 170, 0); // Adjust the y value to match the model's height
 
-        model.receiveShadow = true;
-        model.castShadow = true;
+        
 
         if (model.animations && model.animations.length > 0) {
             mixer = new THREE.AnimationMixer(model);
@@ -192,6 +192,9 @@ function loadModel(scene, camera, renderer) {
 
         model.add(camera);
         scene.add(model);
+        model.receiveShadow = true;
+        model.castShadow = true;
+
         
         animate(renderer, scene, camera);
 
@@ -223,12 +226,13 @@ function loadModel2() {
         const startingRotation = 90 * (Math.PI / 180); // Adjust this value to set the starting rotation (in radians)
         model2.rotation.y = startingRotation;
 
-        const scaleFactor = 5; // Adjust this value to scale the model
+        const scaleFactor = 10; // Adjust this value to scale the model
         model2.scale.set(scaleFactor, scaleFactor, scaleFactor);
-        model2.receiveShadow = true;
-        model2.castShadow = true;
+        
 
         scene.add(model2);
+        model2.receiveShadow = true;
+        model2.castShadow = true;
         toggleLight();
     });
 }
@@ -252,7 +256,7 @@ function toggleLight() {
     setTimeout(toggleLight, time);
 }
 
-/*document.addEventListener('keydown', function(event) {
+document.addEventListener('keydown', function(event) {
     const key = event.key;
     if (isRedLight && document.pointerLockElement &&(key === "w" || key === "a" || key === "s" || key === "d")) {
         showLoseScreen();
@@ -263,7 +267,7 @@ document.addEventListener('mousemove', function(event) {
     if (isRedLight && document.pointerLockElement) {
         showLoseScreen();
     }
-}, false);*/
+}, false);
 
 
 window.addEventListener('keydown', function(event) {
@@ -360,12 +364,6 @@ function animate(renderer, scene, camera) {
         showWinScreen();
         
     }
-
-
-    controls.addEventListener('change', function() {
-        model.rotation.y = camera.rotation.y;
-    });
-
     
     if (checkCollision(model, forest)) {
         console.log('Collision detected!');
@@ -405,16 +403,14 @@ function animate(renderer, scene, camera) {
 
 
 // Execution
-const scene = createScene();
-const camera = createCamera(scene);
-const renderer = createRenderer();
+
 addlight(scene);
 createGround(scene);
 createSkybox(scene);
 createForest(scene, -500, -5000);
-createForest(scene, 43, -8000);
-createForest(scene, 305, -2000);
-createForest(scene, 190, -6000);
+createForest(scene, 3200, -8000);
+createForest(scene, -2105, -2000);
+createForest(scene, -5590, -6000);
 createFinishLine(scene);
 createControls(camera, renderer.domElement);
 toggleLight();
