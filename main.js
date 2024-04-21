@@ -67,11 +67,11 @@ function addlight(scene) {
     light2.shadow.mapSize.width = 8192; // default
     light2.shadow.mapSize.height = 8192; // default
     light2.shadow.camera.near = 10; // default
-    light2.shadow.camera.far = 30000; // default
-    light2.shadow.camera.left = 5000;
-    light2.shadow.camera.right = -5000;
-    light2.shadow.camera.top = 5000;
-    light2.shadow.camera.bottom = -5000;
+    light2.shadow.camera.far = 40000; // default
+    light2.shadow.camera.left = 15000;
+    light2.shadow.camera.right = -15000;
+    light2.shadow.camera.top = 15000;
+    light2.shadow.camera.bottom = -15000;
     
     
 }
