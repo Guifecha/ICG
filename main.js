@@ -2,13 +2,15 @@ import * as THREE from './imports/js/three.module.js';
 import { PointerLockControls } from './imports/js/PointerLockControls.js';
 import { FBXLoader } from './imports/js/FBXLoader.js';
 
-let model,model2, controls;
+let model,model2, controls, mixer,moveAction,idleAction;
+const clock = new THREE.Clock();
 let isJumping = false;
 let keys = {};
 let isRedLight = true;
 let targetRotation = 90 
 let isTurningBack = false;
 let gameOver = false;
+let isMoving = false;
 
 document.addEventListener('keydown', function (event) {
     keys[event.code] = true;
@@ -49,7 +51,7 @@ function createGround(scene) {
 
     var groundMaterial = new THREE.MeshPhongMaterial({color: 0xffffff, map: groundTexture});
 
-    var groundGeometry = new THREE.PlaneGeometry( 30000, 30000 );
+    var groundGeometry = new THREE.PlaneGeometry( 15000, 15000 );
 
     var ground = new THREE.Mesh( groundGeometry, groundMaterial );
     ground.receiveShadow = true; // Set the ground to receive shadows
@@ -107,7 +109,7 @@ function createSkybox(scene) {
 
     for (let i = 0; i < 6; i++)
         materialArray[i].side = THREE.BackSide;
-    let skyboxGeo = new THREE.BoxGeometry( 30000, 15000, 30000);
+    let skyboxGeo = new THREE.BoxGeometry( 15000, 15000, 15000);
     let skybox = new THREE.Mesh( skyboxGeo, materialArray );
     skybox.position.set(0,5000,-6000)
     scene.add( skybox );  
@@ -165,20 +167,51 @@ function createControls(camera, domElement) {
     }, false);
 }
 
-function loadModel(scene, camera, renderer) {
-    const loader = new FBXLoader();
-    loader.load('imports/models/Character_Soldier.fbx', function (object) {
-        model = object;
-        model.position.set(0, 0, -12000);
 
-        // Set the camera's position relative to the model
+
+function loadModel(scene, camera, renderer) {
+    
+    
+    const loader = new FBXLoader();
+    loader.load('imports/models/Beach.fbx', function (object) {
+        model = object;
+        
+        model.position.set(0, 0, -12000);
         camera.position.set(0, 170, 0); // Adjust the y value to match the model's height
 
-        model.add(camera); // Add the camera as a child of the model
-        scene.add(model);
-        animate(renderer, scene, camera);
+        model.receiveShadow = true;
+        model.castShadow = true;
+
+        if (model.animations && model.animations.length > 0) {
+            mixer = new THREE.AnimationMixer(model);
+            moveAction = mixer.clipAction(model.animations[1]); // runnning animation
+            idleAction = mixer.clipAction(model.animations[20]); // idle animation
+            
+        }
         
+
+        model.add(camera);
+        scene.add(model);
+        
+        animate(renderer, scene, camera);
+
     });
+}
+
+
+
+function checkBoundaries(object, minX, maxX, minZ, maxZ) {
+    if (object.x < minX) {
+        object.x = minX;
+    } else if (object.x > maxX) {
+        object.x = maxX;
+    }
+
+    if (object.z < minZ) {
+        object.z = minZ;
+    } else if (object.z > maxZ) {
+        object.z = maxZ;
+    }
 }
 
 function loadModel2() {
@@ -192,6 +225,9 @@ function loadModel2() {
 
         const scaleFactor = 5; // Adjust this value to scale the model
         model2.scale.set(scaleFactor, scaleFactor, scaleFactor);
+        model2.receiveShadow = true;
+        model2.castShadow = true;
+
         scene.add(model2);
         toggleLight();
     });
@@ -229,6 +265,20 @@ document.addEventListener('mousemove', function(event) {
     }
 }, false);*/
 
+
+window.addEventListener('keydown', function(event) {
+    if (event.key === 'w' || event.key === 'a' || event.key === 's' || event.key === 'd') {
+        isMoving = true;
+    }
+});
+
+window.addEventListener('keyup', function(event) {
+    if (event.key === 'w' || event.key === 'a' || event.key === 's' || event.key === 'd') {
+        isMoving = false;
+    }
+});
+
+
 function showLoseScreen() {
     if (gameOver) return;
     gameOver = true;
@@ -260,27 +310,25 @@ function checkCollision(model, forest) {
         let tree = forest[i];
         let distance = model.position.distanceTo(tree.position);
 
-        // Assuming size is the diameter of the model and tree
         if (distance < (model.size / 2 + tree.size / 2)) {
-            return true; // Collision detected
+            return true;
         }
     }
-    return false; // No collision
+    return false;
 }
-
 
 function animate(renderer, scene, camera) {
     const speed = 100; // Adjust the speed of movement
     let velocityY = 0;
-
+    
+    checkBoundaries(model.position, -7500, 7500, -13500, 1500);
     // Calculate the forward and right vectors of the camera
     const forward = new THREE.Vector3();
     camera.getWorldDirection(forward);
     forward.y = 0;
     forward.normalize();
     const right = new THREE.Vector3();
-    right.crossVectors(forward, new THREE.Vector3(0, 1, 0));
-    console.log(controls.getObject().position.z)
+    right.crossVectors(forward, new THREE.Vector3(0, 1, 0));    
 
     if (gameOver) return;
     
@@ -308,12 +356,17 @@ function animate(renderer, scene, camera) {
         isTurningBack = false;
     }
     
-
     if (model.position.z > -1000) { 
         showWinScreen();
         
     }
 
+
+    controls.addEventListener('change', function() {
+        model.rotation.y = camera.rotation.y;
+    });
+
+    
     if (checkCollision(model, forest)) {
         console.log('Collision detected!');
     }
@@ -328,7 +381,24 @@ function animate(renderer, scene, camera) {
             isJumping = false;
         }   
     }
-    
+
+    const delta = clock.getDelta();
+    if (mixer) {
+        if (isMoving) {
+            if (!moveAction.isRunning()) {
+                idleAction.stop();
+                moveAction.play();
+            }
+        } else {
+            if (!idleAction.isRunning()) {
+                moveAction.stop();
+                idleAction.play();
+            }
+        }}
+        mixer.update(delta);
+
+
+
     renderer.render(scene, camera);
     requestAnimationFrame(() => animate(renderer, scene, camera));
 }
