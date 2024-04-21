@@ -53,9 +53,6 @@ function createGround(scene) {
 }
 
 function addlight(scene) {
-    const light = new THREE.AmbientLight(0x404040, 0.1); // soft white light
-    //scene.add(light);
-
     const light2 = new THREE.DirectionalLight(0xffffff, 2);
     light2.position.set(5000, 8000, -9000);
     // Create an Object3D to serve as the target for the light
@@ -192,8 +189,12 @@ function loadModel(scene, camera, renderer) {
 
         model.add(camera);
         scene.add(model);
-        model.receiveShadow = true;
-        model.castShadow = true;
+        model.traverse(function (node) {
+            if (node.isMesh) {
+                node.castShadow = true;
+                node.receiveShadow = true;
+            }
+        });
 
         
         animate(renderer, scene, camera);
@@ -231,8 +232,12 @@ function loadModel2() {
         
 
         scene.add(model2);
-        model2.receiveShadow = true;
-        model2.castShadow = true;
+        model2.traverse(function (node) {
+            if (node.isMesh) {
+                node.castShadow = true;
+                node.receiveShadow = true;
+            }
+        });
         toggleLight();
     });
 }
@@ -256,7 +261,7 @@ function toggleLight() {
     setTimeout(toggleLight, time);
 }
 
-document.addEventListener('keydown', function(event) {
+/*document.addEventListener('keydown', function(event) {
     const key = event.key;
     if (isRedLight && document.pointerLockElement &&(key === "w" || key === "a" || key === "s" || key === "d")) {
         showLoseScreen();
@@ -267,7 +272,7 @@ document.addEventListener('mousemove', function(event) {
     if (isRedLight && document.pointerLockElement) {
         showLoseScreen();
     }
-}, false);
+}, false);*/
 
 
 window.addEventListener('keydown', function(event) {
