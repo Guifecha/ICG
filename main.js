@@ -24,9 +24,7 @@ document.addEventListener('keyup', function (event) {
 const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 45, 30000);
-camera.position.set(-900, 100, -900);
-camera.lookAt(scene.position);
-scene.add(camera);
+
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.shadowMap.enabled = true;
@@ -42,7 +40,7 @@ function createGround(scene) {
 
     var groundMaterial = new THREE.MeshPhongMaterial({color: 0xffffff, map: groundTexture});
 
-    var groundGeometry = new THREE.PlaneGeometry( 15000, 15000 );
+    var groundGeometry = new THREE.PlaneGeometry( 20000, 20000 );
 
     var ground = new THREE.Mesh( groundGeometry, groundMaterial );
     ground.receiveShadow = true; // Set the ground to receive shadows
@@ -54,10 +52,10 @@ function createGround(scene) {
 
 function addlight(scene) {
     const light2 = new THREE.DirectionalLight(0xffffff, 2);
-    light2.position.set(5000, 8000, -9000);
+    light2.position.set(2000, 4000, -10000);
     // Create an Object3D to serve as the target for the light
     const targetObject = new THREE.Object3D();
-    targetObject.position.set(-900, 0, -900); // replace x, y, z with the coordinates you want the light to point to
+    targetObject.position.set(0, 0, -5000); // replace x, y, z with the coordinates you want the light to point to
 
     scene.add(targetObject); // add the target object to the scene
 
@@ -66,14 +64,14 @@ function addlight(scene) {
 
     scene.add(light2);
     light2.castShadow = true;
-    light2.shadow.mapSize.width = 20480; // default
-    light2.shadow.mapSize.height = 20480; // default
-    light2.shadow.camera.near = 1; // default
-    light2.shadow.camera.far = 50000; // default
-    light2.shadow.camera.left = 10000;
-    light2.shadow.camera.right = -10000;
-    light2.shadow.camera.top = 10000;
-    light2.shadow.camera.bottom = -10000;
+    light2.shadow.mapSize.width = 8192; // default
+    light2.shadow.mapSize.height = 8192; // default
+    light2.shadow.camera.near = 10; // default
+    light2.shadow.camera.far = 30000; // default
+    light2.shadow.camera.left = 5000;
+    light2.shadow.camera.right = -5000;
+    light2.shadow.camera.top = 5000;
+    light2.shadow.camera.bottom = -5000;
     
     
 }
@@ -81,7 +79,7 @@ function addlight(scene) {
 function createFinishLine(scene) {
     const finishLineTexture = new THREE.TextureLoader().load('imports/textures/finish.png'); // Replace with the path to your finish line texture
     const finishLineMaterial = new THREE.MeshBasicMaterial({ map: finishLineTexture });
-    const finishLineGeometry = new THREE.BoxGeometry(15000, 10, 300); // Adjust these values to change the size of the finish line
+    const finishLineGeometry = new THREE.BoxGeometry(20000, 10, 300); // Adjust these values to change the size of the finish line
 
     const finishLine = new THREE.Mesh(finishLineGeometry, finishLineMaterial);
     finishLine.position.set(0, 0, -1000); // Adjust these values to change the position of the finish line
@@ -107,9 +105,9 @@ function createSkybox(scene) {
 
     for (let i = 0; i < 6; i++)
         materialArray[i].side = THREE.BackSide;
-    let skyboxGeo = new THREE.BoxGeometry( 15000, 15000, 15000);
+    let skyboxGeo = new THREE.BoxGeometry( 20000, 10500, 20000);
     let skybox = new THREE.Mesh( skyboxGeo, materialArray );
-    skybox.position.set(0,5000,-6000)
+    skybox.position.set(0,4750,-6000)
     scene.add( skybox );  
 }
 
@@ -138,17 +136,17 @@ function createTree(cylinderHeight, cylinderRadius, coneHeight, baseConeRadius, 
 const forest = new THREE.Group();
 function createForest(scene, xpos, zpos) {
     
-    const tree1 = createTree(1000, 100, 300, 400, xpos-100, zpos-100);
+    const tree1 = createTree(1000, 100, 300, 400, xpos-1000, zpos-1000);
     forest.add(tree1);
-    const tree2 = createTree(500, 100, 200, 700, xpos+100, zpos+100);
+    const tree2 = createTree(500, 100, 200, 700, xpos+1050, zpos+1040);
     forest.add(tree2);
-    const tree3 = createTree(130, 100, 200, 90, xpos+300, zpos+300);
+    const tree3 = createTree(130, 100, 200, 90, xpos+3200, zpos+3100);
     forest.add(tree3);
-    const tree4 = createTree(1300, 100, 100, 120, xpos-300, zpos-300);
+    const tree4 = createTree(1300, 100, 100, 120, xpos-3400, zpos-340);
     forest.add(tree4);
-    const tree5 = createTree(250, 103, 300, 400, xpos-500, zpos-700);
+    const tree5 = createTree(250, 103, 300, 400, xpos-540, zpos-700);
     forest.add(tree5);
-    const tree6 = createTree(725, 85, 500, 320, xpos+900, zpos+300);
+    const tree6 = createTree(725, 85, 500, 320, xpos+910, zpos+310);
     forest.add(tree6);
     const tree7 = createTree(386, 30, 400, 120, xpos+1200, zpos-1200);
     forest.add(tree7);
@@ -168,8 +166,6 @@ function createControls(camera, domElement) {
 
 
 function loadModel(scene, camera, renderer) {
-    
-    
     const loader = new FBXLoader();
     loader.load('imports/models/Beach.fbx', function (object) {
         model = object;
@@ -177,16 +173,12 @@ function loadModel(scene, camera, renderer) {
         model.position.set(0, 0, -12000);
         camera.position.set(0, 170, 0); // Adjust the y value to match the model's height
 
-        
-
         if (model.animations && model.animations.length > 0) {
             mixer = new THREE.AnimationMixer(model);
             moveAction = mixer.clipAction(model.animations[1]); // runnning animation
             idleAction = mixer.clipAction(model.animations[20]); // idle animation
             
         }
-        
-
         model.add(camera);
         scene.add(model);
         model.traverse(function (node) {
@@ -195,8 +187,6 @@ function loadModel(scene, camera, renderer) {
                 node.receiveShadow = true;
             }
         });
-
-        
         animate(renderer, scene, camera);
 
     });
@@ -330,7 +320,7 @@ function animate(renderer, scene, camera) {
     const speed = 100; // Adjust the speed of movement
     let velocityY = 0;
     
-    checkBoundaries(model.position, -7500, 7500, -13500, 1500);
+    checkBoundaries(model.position, -10000, 10000, -16000, 4000);
     // Calculate the forward and right vectors of the camera
     const forward = new THREE.Vector3();
     camera.getWorldDirection(forward);
@@ -365,10 +355,10 @@ function animate(renderer, scene, camera) {
         isTurningBack = false;
     }
     
-    if (model.position.z > -1000) { 
+    /*if (model.position.z > -1000) { 
         showWinScreen();
         
-    }
+    }*/
     
     if (checkCollision(model, forest)) {
         console.log('Collision detected!');
@@ -402,8 +392,10 @@ function animate(renderer, scene, camera) {
 
 
 
-    renderer.render(scene, camera);
-    requestAnimationFrame(() => animate(renderer, scene, camera));
+        
+        renderer.render(scene, camera);
+    
+        requestAnimationFrame(() => animate(renderer, scene, camera));
 }
 
 
