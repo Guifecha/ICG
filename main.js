@@ -2,7 +2,7 @@ import * as THREE from './imports/js/three.module.js';
 import { PointerLockControls } from './imports/js/PointerLockControls.js';
 import { FBXLoader } from './imports/js/FBXLoader.js';
 
-let model,model2, controls, mixer,moveAction,idleAction;
+let model,model2, controls, mixer,moveAction,idleAction,gunAction2,mixer2;
 const clock = new THREE.Clock();
 let isJumping = false;
 let keys = {};
@@ -11,6 +11,7 @@ let targetRotation = 90
 let isTurningBack = false;
 let gameOver = false;
 let isMoving = false;
+let isMousemoving = false;
 
 document.addEventListener('keydown', function (event) {
     keys[event.code] = true;
@@ -169,9 +170,10 @@ function loadModel(scene, camera, renderer) {
     const loader = new FBXLoader();
     loader.load('imports/models/Beach.fbx', function (object) {
         model = object;
-        
-        model.position.set(0, 0, -12000);
-        camera.position.set(0, 170, 0); // Adjust the y value to match the model's height
+        const randomX = Math.random() * 15000 - 7500;
+        model.position.set(randomX, 0, -12000);
+        camera.position.set(0, 200, 0); // Adjust the y value to match the model's height
+        model.rotation.y = Math.PI; // Adjust this value to rotate the model
 
         if (model.animations && model.animations.length > 0) {
             mixer = new THREE.AnimationMixer(model);
@@ -192,7 +194,33 @@ function loadModel(scene, camera, renderer) {
     });
 }
 
+function loadModel2() {
+    const loader = new FBXLoader();
+    loader.load('imports/models/Wizard.fbx', function (object) {
+        model2 = object;
+        model2.position.set(0, 0, -1000);
 
+        const startingRotation = 90 * (Math.PI / 180); // Adjust this value to set the starting rotation (in radians)
+        model2.rotation.y = startingRotation;
+
+        const scaleFactor = 10; // Adjust this value to scale the model
+        model2.scale.set(scaleFactor, scaleFactor, scaleFactor);
+        
+        if (model2.animations && model2.animations.length > 0) {
+            mixer2 = new THREE.AnimationMixer(model2);
+            gunAction2 = mixer2.clipAction(model2.animations[11]); // shooting 11     wizard 6 nao faz nada 11 feitico
+        }
+
+        scene.add(model2);
+        model2.traverse(function (node) {
+            if (node.isMesh) {
+                node.castShadow = true;
+                node.receiveShadow = true;
+            }
+        });
+        toggleLight();
+    });
+}
 
 function checkBoundaries(object, minX, maxX, minZ, maxZ) {
     if (object.x < minX) {
@@ -208,29 +236,7 @@ function checkBoundaries(object, minX, maxX, minZ, maxZ) {
     }
 }
 
-function loadModel2() {
-    const loader = new FBXLoader();
-    loader.load('imports/models/charpolice.fbx', function (object) {
-        model2 = object;
-        model2.position.set(0, 0, -1000);
 
-        const startingRotation = 90 * (Math.PI / 180); // Adjust this value to set the starting rotation (in radians)
-        model2.rotation.y = startingRotation;
-
-        const scaleFactor = 10; // Adjust this value to scale the model
-        model2.scale.set(scaleFactor, scaleFactor, scaleFactor);
-        
-
-        scene.add(model2);
-        model2.traverse(function (node) {
-            if (node.isMesh) {
-                node.castShadow = true;
-                node.receiveShadow = true;
-            }
-        });
-        toggleLight();
-    });
-}
 
 function toggleLight() {
     if (!model2) return;
@@ -251,7 +257,7 @@ function toggleLight() {
     setTimeout(toggleLight, time);
 }
 
-/*document.addEventListener('keydown', function(event) {
+document.addEventListener('keydown', function(event) {
     const key = event.key;
     if (isRedLight && document.pointerLockElement &&(key === "w" || key === "a" || key === "s" || key === "d")) {
         showLoseScreen();
@@ -262,35 +268,53 @@ document.addEventListener('mousemove', function(event) {
     if (isRedLight && document.pointerLockElement) {
         showLoseScreen();
     }
-}, false);*/
+}, false);
 
 
 window.addEventListener('keydown', function(event) {
-    if (event.key === 'w' || event.key === 'a' || event.key === 's' || event.key === 'd') {
+    if (event.key === 'w' || event.key === 'a' || event.key === 's' || event.key === 'd' && document.pointerLockElement) {
         isMoving = true;
     }
 });
 
 window.addEventListener('keyup', function(event) {
-    if (event.key === 'w' || event.key === 'a' || event.key === 's' || event.key === 'd') {
+    if (event.key === 'w' || event.key === 'a' || event.key === 's' || event.key === 'd' && document.pointerLockElement) {
         isMoving = false;
+    }
+});
+
+window.addEventListener('mousemove', function() {
+    if (isRedLight && document.pointerLockElement) {
+        isMousemoving = true;
+    }
+    
+});
+
+window.addEventListener('mouseout', function() {
+    isMousemoving = false;
+});
+
+window.addEventListener('redlightchange', function() {
+    if (!isRedLight) {
+        isMousemoving = false;
     }
 });
 
 
 function showLoseScreen() {
-    if (gameOver) return;
-    gameOver = true;
-    const messageDiv = document.getElementById('Screen');
-    console.log("You lose!")
-    messageDiv.textContent = "You lose!";
-    messageDiv.style.display = "block";
-    const rematchButton = document.getElementById('rematchButton');
-    rematchButton.addEventListener('click', function() {
-        window.location.reload();
-    });
+    setTimeout(function() {
+        if (gameOver) return;
+        gameOver = true;
+        const messageDiv = document.getElementById('Screen');
+        console.log("You lose!")
+        messageDiv.textContent = "You lose!";
+        messageDiv.style.display = "block";
+        const rematchButton = document.getElementById('rematchButton');
+        rematchButton.addEventListener('click', function() {
+            window.location.reload();
+        });
+    }, 1200);
 }
-
 function showWinScreen() {
     if (gameOver) return;
     gameOver = true;
@@ -317,7 +341,7 @@ function checkCollision(model, forest) {
 }
 
 function animate(renderer, scene, camera) {
-    const speed = 100; // Adjust the speed of movement
+    const speed = 100;
     let velocityY = 0;
     
     checkBoundaries(model.position, -10000, 10000, -16000, 4000);
@@ -355,10 +379,10 @@ function animate(renderer, scene, camera) {
         isTurningBack = false;
     }
     
-    /*if (model.position.z > -1000) { 
+    if (model.position.z > -1000) { 
         showWinScreen();
         
-    }*/
+    }
     
     if (checkCollision(model, forest)) {
         console.log('Collision detected!');
@@ -374,6 +398,12 @@ function animate(renderer, scene, camera) {
             isJumping = false;
         }   
     }
+
+
+
+
+    
+
 
     const delta = clock.getDelta();
     if (mixer) {
@@ -391,15 +421,24 @@ function animate(renderer, scene, camera) {
         mixer.update(delta);
 
 
+        if (mixer2) {
+            if ((isMoving || isMousemoving)&& isRedLight) {
+                if (!gunAction2.isRunning()) {
+                    gunAction2.setLoop(THREE.LoopOnce); // Set the loop mode to once
+                    gunAction2.clampWhenFinished = false; // Set clampWhenFinished to true to pause the animation on the last frame
+                    gunAction2.play();
+                }}}
+
+            mixer2.update(delta);
+        
+        
+
 
         
         renderer.render(scene, camera);
     
         requestAnimationFrame(() => animate(renderer, scene, camera));
 }
-
-
-// Execution
 
 addlight(scene);
 createGround(scene);
