@@ -77,14 +77,22 @@ function addlight(scene) {
     
 }
 
-function createFinishLine(scene) {
+function createStartFinishLine(scene) {
     const finishLineTexture = new THREE.TextureLoader().load('imports/textures/finish.png'); // Replace with the path to your finish line texture
     const finishLineMaterial = new THREE.MeshBasicMaterial({ map: finishLineTexture });
-    const finishLineGeometry = new THREE.BoxGeometry(20000, 10, 300); // Adjust these values to change the size of the finish line
+    const finishLineGeometry = new THREE.BoxGeometry(20000, 10, 400); // Adjust these values to change the size of the finish line
 
     const finishLine = new THREE.Mesh(finishLineGeometry, finishLineMaterial);
     finishLine.position.set(0, 0, -1000); // Adjust these values to change the position of the finish line
 
+    const startinglineTexture = new THREE.TextureLoader().load('imports/textures/finish.png'); // Replace with the path to your finish line texture
+    const startinglineMaterial = new THREE.MeshBasicMaterial({ map: startinglineTexture });
+    const startinglineGeometry = new THREE.BoxGeometry(20000, 10, 400); // Adjust these values to change the size of the finish line
+
+    const startingline = new THREE.Mesh(startinglineGeometry, startinglineMaterial);
+    startingline.position.set(0, 0, -13500); // Adjust these values to change the position of the finish line
+
+    scene.add(startingline);
     scene.add(finishLine);
 }
 
@@ -220,6 +228,7 @@ function loadModel2() {
         });
         toggleLight();
     });
+    loadModel(scene, camera, renderer);
 }
 
 function checkBoundaries(object, minX, maxX, minZ, maxZ) {
