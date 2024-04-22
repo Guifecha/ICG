@@ -440,16 +440,19 @@ function animate(renderer, scene, camera) {
         requestAnimationFrame(() => animate(renderer, scene, camera));
 }
 
-addlight(scene);
-createGround(scene);
-createSkybox(scene);
-createForest(scene, -500, -5000);
-createForest(scene, 3200, -8000);
-createForest(scene, -2105, -2000);
-createForest(scene, -5590, -6000);
-createFinishLine(scene);
-createControls(camera, renderer.domElement);
-toggleLight();
-loadModel2();
-loadModel(scene, camera, renderer);
+
+window.onload = function() {
+    addlight(scene);
+    createGround(scene);
+    createSkybox(scene);
+    createForest(scene, -500, -5000);
+    createForest(scene, 3200, -8000);
+    createForest(scene, -2105, -2000);
+    createForest(scene, -5590, -6000);
+    createFinishLine(scene);
+    createControls(camera, renderer.domElement);
+    toggleLight();
+    loadModel2();
+    loadModel(scene, camera, renderer);
+};
 
