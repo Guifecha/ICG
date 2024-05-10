@@ -1,6 +1,8 @@
 import * as THREE from './imports/js/three.module.js';
 import { PointerLockControls } from './imports/js/PointerLockControls.js';
 import { FBXLoader } from './imports/js/FBXLoader.js';
+import { GLTFLoader } from './imports/js/GLTFLoader.js';
+
 
 let model,model2, controls, mixer,moveAction,idleAction,gunAction2,mixer2;
 const clock = new THREE.Clock();
@@ -25,6 +27,26 @@ document.addEventListener('keyup', function (event) {
 const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 45, 30000);
+
+const manager = new THREE.LoadingManager();
+
+manager.onStart = function (url, itemsLoaded, itemsTotal) {
+    console.log('Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
+};
+
+manager.onLoad = function () {
+    console.log('All resources loaded.');
+    // Hide your loading screen here
+    // Show your site here
+};
+
+manager.onProgress = function (url, itemsLoaded, itemsTotal) {
+    console.log('Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
+};
+
+manager.onError = function (url) {
+    console.log('There was an error loading ' + url);
+};
 
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -52,6 +74,8 @@ function createGround(scene) {
 }
 
 function addlight(scene) {
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    scene.add(ambientLight);
     const light2 = new THREE.DirectionalLight(0xffffff, 2);
     light2.position.set(2000, 4000, -10000);
     // Create an Object3D to serve as the target for the light
@@ -68,11 +92,11 @@ function addlight(scene) {
     light2.shadow.mapSize.width = 8192; // default
     light2.shadow.mapSize.height = 8192; // default
     light2.shadow.camera.near = 10; // default
-    light2.shadow.camera.far = 40000; // default
-    light2.shadow.camera.left = 15000;
-    light2.shadow.camera.right = -15000;
-    light2.shadow.camera.top = 15000;
-    light2.shadow.camera.bottom = -15000;
+    light2.shadow.camera.far = 400000; // default
+    light2.shadow.camera.left = 20000;
+    light2.shadow.camera.right = -20000;
+    light2.shadow.camera.top = 30000;
+    light2.shadow.camera.bottom = -30000;
     
     
 }
@@ -175,12 +199,12 @@ function createControls(camera, domElement) {
 
 
 function loadModel(scene, camera, renderer) {
-    const loader = new FBXLoader();
+    const loader = new FBXLoader(manager);
     loader.load('imports/models/Beach.fbx', function (object) {
         model = object;
         const randomX = Math.random() * 15000 - 7500;
-        model.position.set(randomX, 0, -12000);
-        camera.position.set(0, 200, 0); // Adjust the y value to match the model's height
+        model.position.set(randomX, 0, -13500);
+        camera.position.set(0, 170, 0); // Adjust the y value to match the model's height
         model.rotation.y = Math.PI; // Adjust this value to rotate the model
 
         if (model.animations && model.animations.length > 0) {
@@ -203,7 +227,7 @@ function loadModel(scene, camera, renderer) {
 }
 
 function loadModel2() {
-    const loader = new FBXLoader();
+    const loader = new FBXLoader(manager);
     loader.load('imports/models/Wizard.fbx', function (object) {
         model2 = object;
         model2.position.set(0, 0, -1000);
@@ -228,7 +252,6 @@ function loadModel2() {
         });
         toggleLight();
     });
-    loadModel(scene, camera, renderer);
 }
 
 function checkBoundaries(object, minX, maxX, minZ, maxZ) {
@@ -245,6 +268,26 @@ function checkBoundaries(object, minX, maxX, minZ, maxZ) {
     }
 }
 
+function addBuilding(xpos,zpos,rotation,scene) {
+    const loader = new GLTFLoader();
+    loader.load('imports/models/Building.glb', function (gltf) {
+        const building = gltf.scene;
+
+        // Set the building's position and scale here
+        building.position.set(xpos, 0, zpos);
+        const scaleFactor = 1300;
+        building.scale.set(scaleFactor,scaleFactor ,scaleFactor);
+        building.rotation.y = rotation; // Adjust this value to rotate the building
+
+        scene.add(building);
+        building.traverse(function (node) {
+            if (node.isMesh) {
+                node.castShadow = true;
+                node.receiveShadow = true;
+            }
+        })
+    });}
+    
 
 
 function toggleLight() {
@@ -353,7 +396,7 @@ function animate(renderer, scene, camera) {
     const speed = 100;
     let velocityY = 0;
     
-    checkBoundaries(model.position, -10000, 10000, -16000, 4000);
+    //checkBoundaries(model.position, -10000, 10000, -16000, 4000);
     // Calculate the forward and right vectors of the camera
     const forward = new THREE.Vector3();
     camera.getWorldDirection(forward);
@@ -407,13 +450,6 @@ function animate(renderer, scene, camera) {
             isJumping = false;
         }   
     }
-
-
-
-
-    
-
-
     const delta = clock.getDelta();
     if (mixer) {
         if (isMoving) {
@@ -454,13 +490,15 @@ window.onload = function() {
     addlight(scene);
     createGround(scene);
     createSkybox(scene);
-    createForest(scene, -500, -5000);
+    /*createForest(scene, -500, -5000);
     createForest(scene, 3200, -8000);
     createForest(scene, -2105, -2000);
-    createForest(scene, -5590, -6000);
-    createFinishLine(scene);
+    createForest(scene, -5590, -6000);*/
+    createStartFinishLine(scene);
     createControls(camera, renderer.domElement);
-    toggleLight();
+    
+    addBuilding(-8000,-8500,Math.PI/2,scene);
+    addBuilding(8000,-8500,-Math.PI/2,scene);
     loadModel2();
     loadModel(scene, camera, renderer);
 };
